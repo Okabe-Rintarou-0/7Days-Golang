@@ -7,8 +7,6 @@ import (
 	"strconv"
 )
 
-type Method int8
-
 type FuncHandler func(c *Context)
 
 type Engine struct {
@@ -26,24 +24,8 @@ func (engine *Engine) addRoute(pattern string, handler FuncHandler) {
 	fmt.Printf("Add a router[pattern = %s] to the engine\n", pattern)
 }
 
-func (engine *Engine) Bind(method Method, path string, handler FuncHandler) {
-	var methodStr string
-	switch method {
-	case GET:
-		methodStr = "GET"
-	case POST:
-		methodStr = "POST"
-	case PUT:
-		methodStr = "PUT"
-	case DELETE:
-		methodStr = "DELETE"
-	case OPTION:
-		methodStr = "OPTION"
-	default:
-		break
-	}
-
-	engine.addRoute(methodStr+"-"+path, handler)
+func (engine *Engine) Bind(method string, path string, handler FuncHandler) {
+	engine.addRoute(method+"-"+path, handler)
 }
 
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
