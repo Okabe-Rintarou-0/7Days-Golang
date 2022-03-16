@@ -7,11 +7,12 @@ import (
 )
 
 type Context struct {
-	Writer  http.ResponseWriter
-	Request *http.Request
-	Method  string
-	Path    string
-	Params  map[string]string
+	Writer      http.ResponseWriter
+	Request     *http.Request
+	Method      string
+	Pattern     string
+	Params      map[string]string
+	Middlewares []FuncHandler
 }
 
 type JSON map[string]interface{}
@@ -21,7 +22,7 @@ func NewContext(w http.ResponseWriter, r *http.Request) *Context {
 		Writer:  w,
 		Request: r,
 		Method:  r.Method,
-		Path:    r.URL.Path,
+		Pattern: r.URL.Path,
 	}
 }
 
@@ -65,5 +66,5 @@ func (c *Context) GetQuery(key string) string {
 }
 
 func (c *Context) GetForm(key string) string {
-	return c.Request.Form.Get(key)
+	return c.Request.FormValue(key)
 }

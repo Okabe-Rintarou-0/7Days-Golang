@@ -22,7 +22,7 @@ func NewNode(token string, wildcard uint8) *Node {
 }
 
 func (root *Node) Info() string {
-	info := fmt.Sprintf("[Token] = %s\n", root.Token)
+	info := fmt.Sprintf("[Token] = %s\n[Child num] = %d\n", root.Token, len(root.Children))
 	for i, child := range root.Children {
 		info += fmt.Sprintf("[Child %d's token] = %s\n", i, child.Token)
 	}
@@ -33,10 +33,12 @@ func (root *Node) Insert(tokens []string, handler FuncHandler) {
 	p := root
 	var nextChild *Node
 	var found bool
+	var childToken string
 	for _, curToken := range tokens {
 		found = false
 		for _, child := range p.Children {
-			if child.Token == curToken {
+			childToken = child.Token
+			if childToken == curToken || string(rune(child.WildCard))+childToken == curToken {
 				nextChild = child
 				found = true
 				break
@@ -50,7 +52,6 @@ func (root *Node) Insert(tokens []string, handler FuncHandler) {
 				wildCard = curToken[0]
 				curToken = curToken[1:]
 			}
-
 			nextChild = NewNode(curToken, wildCard)
 			p.Children = append(p.Children, nextChild)
 			if wildCard == '*' {
@@ -90,5 +91,6 @@ func (root *Node) Parse(tokens []string) (FuncHandler, map[string]string) {
 			return nil, nil
 		}
 	}
+	//fmt.Println(p.Info())
 	return p.handler, params
 }
