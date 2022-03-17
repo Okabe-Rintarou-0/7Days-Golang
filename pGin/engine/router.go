@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 )
 
@@ -26,7 +25,7 @@ func ParsePattern(pattern string) []string {
 			i++
 		}
 	}
-	fmt.Printf("got tokens[size = %d]: %v\n", len(tokens), tokens)
+	//fmt.Printf("got tokens[size = %d]: %v\n", len(tokens), tokens)
 	return tokens
 }
 
@@ -45,15 +44,21 @@ func (router *Router) handle(c *Context) {
 		return
 	}
 
+	handler, params := root.Parse(ParsePattern(c.Pattern))
+	fmt.Printf("Got params: %v\n", params)
+	c.Params = params
+	for _, interceptor := range c.Interceptors {
+		if !interceptor(c) {
+			c.Forbidden()
+			return
+		}
+	}
+
 	for _, middleware := range c.Middlewares {
 		middleware(c)
 	}
 
-	if handler, params := root.Parse(ParsePattern(c.Pattern)); handler != nil {
-		c.Params = params
-		fmt.Printf("Got params: %v\n", params)
+	if handler != nil {
 		handler(c)
-	} else {
-		http.Error(c.Writer, "Not Found", http.StatusNotFound)
 	}
 }
