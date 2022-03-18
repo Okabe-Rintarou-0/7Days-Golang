@@ -12,31 +12,35 @@ func defaultKVStore() *mapKVStore {
 	}
 }
 
-func (dkvs *mapKVStore) Get(key string) Value {
-	if value, ok := dkvs.store[key]; ok {
-		return value
-	}
-	return nil
+func (dkvs *mapKVStore) Get(key string) (Value, bool) {
+	value, ok := dkvs.store[key]
+	return value, ok
 }
 
 func (dkvs *mapKVStore) Put(key string, value Value) {
 	if oldValue, ok := dkvs.store[key]; ok {
-		dkvs.size += int(value.Len() - oldValue.Len())
+		dkvs.size += value.Len() - oldValue.Len()
 	} else {
-		dkvs.size += int(value.Len())
+		dkvs.size += value.Len()
 	}
 	dkvs.store[key] = value
 }
 
-func (dkvs *mapKVStore) Del(key string) Value {
+func (dkvs *mapKVStore) Del(key string) (Value, bool) {
 	var value Value
-	if value = dkvs.Get(key); value != nil {
+	var ok bool
+	if value, ok = dkvs.Get(key); ok {
 		delete(dkvs.store, key)
-		dkvs.size -= int(value.Len())
+		dkvs.size -= value.Len()
 	}
-	return value
+	return value, ok
 }
 
 func (dkvs *mapKVStore) Size() int {
 	return dkvs.size
+}
+
+func (dkvs *mapKVStore) FlushAll() {
+	dkvs.size = 0
+	dkvs.store = map[string]Value{}
 }
