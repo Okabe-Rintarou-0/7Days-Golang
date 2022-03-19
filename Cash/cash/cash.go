@@ -38,10 +38,10 @@ func (c *Cash) Del(key string) (ByteView, bool) {
 	return ByteView{}, false
 }
 
-func (c *Cash) Info() {
+func (c *Cash) Info() string {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	c.cache.Info()
+	return c.cache.Info()
 }
 
 func (c *Cash) FlushAll() {

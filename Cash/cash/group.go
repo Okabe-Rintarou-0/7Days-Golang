@@ -57,8 +57,8 @@ func (g *group) Del(key string) (ByteView, error) {
 	return ByteView{}, fmt.Errorf("no such key %s", key)
 }
 
-func (g *group) Info() {
-	g.cash.Info()
+func (g *group) Info() string {
+	return g.cash.Info()
 }
 
 func (g *group) FlushAll() {

@@ -69,7 +69,7 @@ func (c *Cache) FlushAll() {
 	c.kvs.FlushAll()
 }
 
-func (c *Cache) Info() {
+func (c *Cache) Info() string {
 	var percent = float64(c.kvs.Size()) / float64(c.maxVolume)
 	numBlocks := int(percent * 20)
 	sb := strings.Builder{}
@@ -80,5 +80,5 @@ func (c *Cache) Info() {
 	for ; i < 20; i++ {
 		sb.WriteString(" ")
 	}
-	fmt.Printf("Info of cache:\nCapacity: %d bytes\nUsed %d bytes: %.2f%% |%s|\n", c.maxVolume, c.kvs.Size(), percent*100, sb.String())
+	return fmt.Sprintf("Info of cache:\nCapacity: %d bytes\nUsed %d bytes: %.2f%% |%s|\n", c.maxVolume, c.kvs.Size(), percent*100, sb.String())
 }
