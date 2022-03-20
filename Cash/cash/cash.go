@@ -2,6 +2,7 @@ package cash
 
 import (
 	"Cash/cash/cache"
+	"strconv"
 	"sync"
 )
 
@@ -10,6 +11,8 @@ type Cash struct {
 	lock   *sync.RWMutex
 	logger logger
 }
+
+type Info map[string]string
 
 func (c *Cash) Get(key string) (ByteView, bool) {
 	c.lock.RLock()
@@ -38,10 +41,15 @@ func (c *Cash) Del(key string) (ByteView, bool) {
 	return ByteView{}, false
 }
 
-func (c *Cash) Info() string {
+func (c *Cash) Info() Info {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	return c.cache.Info()
+	used, maxVolume, percent := c.cache.Info()
+	return Info{
+		"used":      strconv.Itoa(used),
+		"maxVolume": strconv.Itoa(maxVolume),
+		"percent":   strconv.FormatFloat(percent, 'f', 2, 64),
+	}
 }
 
 func (c *Cash) FlushAll() {

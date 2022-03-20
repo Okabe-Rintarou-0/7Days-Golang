@@ -1,8 +1,11 @@
 package cash
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 const (
@@ -12,12 +15,16 @@ const (
 type HTTPPool struct {
 	self     string
 	basePath string
-	vs       *viewServer
+	lock     *sync.RWMutex
+	groups   map[string]*group
 }
 
 func NewHTTPPool(self string) *HTTPPool {
 	return &HTTPPool{
-		self, defaultPath, ViewServer(),
+		self:     self,
+		basePath: defaultPath,
+		lock:     &sync.RWMutex{},
+		groups:   map[string]*group{},
 	}
 }
 
@@ -59,10 +66,17 @@ func (pool *HTTPPool) handleDel(group *group, w http.ResponseWriter, r *http.Req
 
 func (pool *HTTPPool) info(group *group, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(group.Info()))
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(group.Info()); err != nil {
+		pool.fail(w, err.Error())
+	}
 }
 
 func (pool *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")  //允许访问所有域
+	w.Header().Set("Access-Control-Allow-Headers", "*") //header的类型
+	w.Header().Set("Access-Control-Allow-Method", "*")
 	path := r.URL.Path
 	if !strings.HasPrefix(path, pool.basePath) {
 		http.NotFound(w, r)
@@ -70,9 +84,15 @@ func (pool *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parts := strings.SplitN(path[len(pool.basePath):], "/", 2)
+
+	if parts[0] == "__groups__" {
+		pool.writeGroupsInfo(w)
+		return
+	}
+
 	groupName := parts[0]
 	var group *group
-	if group = pool.vs.GetGroup(groupName); group == nil {
+	if group = pool.GetGroup(groupName); group == nil {
 		pool.fail(w, "No such group")
 		return
 	}
@@ -93,9 +113,42 @@ func (pool *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pool *HTTPPool) NewGroup(logLevel, maxVolume int, namespace string, getter Getter) *group {
-	return pool.vs.NewGroup(logLevel, maxVolume, namespace, getter)
+	newGroup := &group{
+		namespace: namespace,
+		getter:    getter,
+		cash:      defaultCash(logLevel, maxVolume, namespace),
+	}
+	pool.lock.Lock()
+	defer pool.lock.Unlock()
+	pool.groups[namespace] = newGroup
+	return newGroup
 }
 
 func (pool *HTTPPool) GetGroup(namespace string) *group {
-	return pool.vs.GetGroup(namespace)
+	pool.lock.RLock()
+	defer pool.lock.RUnlock()
+	return pool.groups[namespace]
+}
+
+func (pool *HTTPPool) GroupInfo() []string {
+	pool.lock.RLock()
+	defer pool.lock.RUnlock()
+	var namespaces []string
+	for namespace := range pool.groups {
+		namespaces = append(namespaces, namespace)
+	}
+	return namespaces
+}
+
+func (pool *HTTPPool) writeGroupsInfo(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(pool.GroupInfo()); err != nil {
+		pool.fail(w, err.Error())
+	}
+}
+
+func (pool *HTTPPool) Run() {
+	log.Fatal(http.ListenAndServe(pool.self, pool))
 }

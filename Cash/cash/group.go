@@ -57,7 +57,7 @@ func (g *group) Del(key string) (ByteView, error) {
 	return ByteView{}, fmt.Errorf("no such key %s", key)
 }
 
-func (g *group) Info() string {
+func (g *group) Info() Info {
 	return g.cash.Info()
 }
 
@@ -78,4 +78,8 @@ func (g *group) load(key string) (ByteView, error) {
 	// Populate to the cache.
 	g.populate(key, value)
 	return value, nil
+}
+
+func (g *group) Namespace() string {
+	return g.namespace
 }

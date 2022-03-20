@@ -4,8 +4,6 @@ import (
 	"Cash/cash"
 	"Cash/utils"
 	"flag"
-	"log"
-	"net/http"
 )
 
 func main() {
@@ -23,5 +21,6 @@ func main() {
 	addr := "localhost:8000"
 	pool := cash.NewHTTPPool(addr)
 	pool.NewGroup(logLevel, maxVolume, "country", cash.GetterFunc(naiveGetter()))
-	log.Fatal(http.ListenAndServe(addr, pool))
+	pool.NewGroup(logLevel, maxVolume, "game", cash.GetterFunc(naiveGetter()))
+	pool.Run()
 }

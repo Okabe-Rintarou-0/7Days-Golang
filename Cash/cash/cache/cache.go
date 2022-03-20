@@ -1,10 +1,5 @@
 package cache
 
-import (
-	"fmt"
-	"strings"
-)
-
 type Value interface {
 	Len() int
 }
@@ -69,16 +64,17 @@ func (c *Cache) FlushAll() {
 	c.kvs.FlushAll()
 }
 
-func (c *Cache) Info() string {
-	var percent = float64(c.kvs.Size()) / float64(c.maxVolume)
-	numBlocks := int(percent * 20)
-	sb := strings.Builder{}
-	var i = 0
-	for ; i < numBlocks; i++ {
-		sb.WriteString("█")
-	}
-	for ; i < 20; i++ {
-		sb.WriteString(" ")
-	}
-	return fmt.Sprintf("Info of cache:\nCapacity: %d bytes\nUsed %d bytes: %.2f%% |%s|\n", c.maxVolume, c.kvs.Size(), percent*100, sb.String())
+func (c *Cache) Info() (int, int, float64) {
+	//var percent = float64(c.kvs.Size()) / float64(c.maxVolume)
+	return c.kvs.Size(), c.maxVolume, float64(c.kvs.Size()) / float64(c.maxVolume) * 100
+	//numBlocks := int(percent * 20)
+	//sb := strings.Builder{}
+	//var i = 0
+	//for ; i < numBlocks; i++ {
+	//	sb.WriteString("█")
+	//}
+	//for ; i < 20; i++ {
+	//	sb.WriteString(" ")
+	//}
+	//return fmt.Sprintf("Info of cache:\nCapacity: %d bytes\nUsed %d bytes: %.2f%% |%s|\n", c.maxVolume, c.kvs.Size(), percent*100, sb.String())
 }
