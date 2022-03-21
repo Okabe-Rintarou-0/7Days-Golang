@@ -1,8 +1,7 @@
 import React from "react";
-import {Row, Col, Card} from 'antd'
+import {Card, Col, Row} from 'antd'
 import EChartsReact from "echarts-for-react";
 import {get} from "../utils/ajax";
-import {type} from "os";
 
 interface MonitorProps {
     addr: string
@@ -30,7 +29,11 @@ export default class Monitor extends React.Component<MonitorProps, any> {
         this.setState({
             addr: props.addr,
             namespace: props.namespace,
-        })
+        });
+    }
+
+    componentDidMount(): void {
+        this.poll();
     }
 
     reset = () => {
@@ -145,10 +148,6 @@ export default class Monitor extends React.Component<MonitorProps, any> {
         };
     };
 
-    componentDidMount(): void {
-        this.poll()
-    }
-
     defaultPath = '/__cash__/';
 
     pushBack(array: Array<number>, data: number, maxLength: number): Array<number> {
@@ -160,6 +159,7 @@ export default class Monitor extends React.Component<MonitorProps, any> {
 
     getInfo = () => {
         let url: string = `http://${this.props.addr}${this.defaultPath}${this.props.namespace}/info`;
+        console.log(this.props.namespace);
         let start = Date.now();
         get(url, (info: Info) => {
             this.setState({

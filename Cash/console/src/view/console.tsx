@@ -68,7 +68,7 @@ export default class ConsoleView extends React.Component<any, any> {
             </Sider>
             <Layout>
                 <Header style={{padding: 0}}><p style={{color: "white", fontSize: "2em"}}>Cash</p></Header>
-                <Content style={{margin: '24px 16px 0'}}>
+                <Content style={{margin: '24px 16px 0', height: 1125}}>
                     <Monitor ref={this.monitor} addr={this.state.addr} namespace={this.state.monitorGroup}/>
                 </Content>
                 <Footer style={{textAlign: 'center'}}>

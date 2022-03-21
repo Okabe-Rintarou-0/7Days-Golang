@@ -18,8 +18,7 @@ func main() {
 	maxVolume := utils.Clamp(*v, 0, volume4G)
 	logLevel := utils.Clamp(*l, 0, 2)
 
-	addr := "localhost:8000"
-	pool := cash.NewHTTPPool(addr)
+	pool := cash.NewHTTPPool("localhost:8000")
 	pool.NewGroup(logLevel, maxVolume, "country", cash.GetterFunc(naiveGetter()))
 	pool.NewGroup(logLevel, maxVolume, "game", cash.GetterFunc(naiveGetter()))
 	pool.Run()
