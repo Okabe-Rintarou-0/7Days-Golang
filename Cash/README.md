@@ -53,9 +53,21 @@ It finds the peer according to the given key by using consistent hash algorithm.
 
 Take **GET** operation for example, a group will firstly try get the k-v pair from the cache. If it luckily hits, then return the value, otherwise, it will try to get it from a peer. The group can get a **PeerClient** object by calling peerPicker.pick. The PeerClient is kind of like the stub of RPC, which provides a abstraction layer(Get, Put, etc) . The group can calling the interface very naturally.
 
+```go
+type PeerClient interface {
+   Get(key string) (ByteView, error)
+   Put(key string, value ByteView) error
+   Del(key string) (ByteView, error)
+}
+
+type PeerPicker interface {
+   PickPeer(key string, namespace string) PeerClient
+}
+```
+
 The consistent hash and the abstraction make the distributed system behave like a single one. 
 
-![图源自网络，侵删](README.assets/consistent_hashing.jpg)
+![图源自网络，侵删](C:/Users/92304/Desktop/consistent_hashing.jpg)
 
 ### Api
 
