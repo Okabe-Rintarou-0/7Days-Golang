@@ -4,10 +4,21 @@ Cash, is with the same pronunciation as **"Cache"**([kæʃ]). It's a Groupcache-
 
 ### Get Started
 
-Create a new http pool that running at your given address:
+Cash is a distributed cache system based on consistent hash, so you need to create several peers at first:
 
 ```go
-pool := cash.NewHTTPPool("localhost:8000")
+peers := []string{"localhost:8000", "localhost:8001", "localhost:8002"}
+peerMap := map[int]string{
+   8000: "localhost:8000",
+   8001: "localhost:8001",
+   8002: "localhost:8002",
+}
+```
+
+Then create a new http pool that running at your given address:
+
+```go
+pool := cash.NewHTTPPool("localhost:8000", peers)
 ```
 
 Create some groups with different namespaces. Groups are independent from each other.
@@ -33,6 +44,18 @@ func naiveGetter() func(key string) (cash.ByteView, error) {
 	}
 }
 ```
+
+### Control flow
+
+The httpPool is in charge of all the groups and the peers. That is to say, it knows where the peers and groups are and which key should be mapped to which peer.
+
+It finds the peer according to the given key by using consistent hash algorithm. It provides a **PeerPicker** object for any groups, which is used to pick a peer.
+
+Take **GET** operation for example, a group will firstly try get the k-v pair from the cache. If it luckily hits, then return the value, otherwise, it will try to get it from a peer. The group can get a **PeerClient** object by calling peerPicker.pick. The PeerClient is kind of like the stub of RPC, which provides a abstraction layer(Get, Put, etc) . The group can calling the interface very naturally.
+
+The consistent hash and the abstraction make the distributed system behave like a single one. 
+
+![图源自网络，侵删](README.assets/consistent_hashing.jpg)
 
 ### Api
 

@@ -4,12 +4,6 @@ type ByteView struct {
 	bytes []byte
 }
 
-func Empty() ByteView {
-	return ByteView{
-		bytes: nil,
-	}
-}
-
 func (b ByteView) Len() int {
 	return len(b.bytes)
 }

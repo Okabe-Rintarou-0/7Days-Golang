@@ -3,6 +3,7 @@ import {Button, Layout, Menu, Row, Select, Col, Input, InputRef, Card} from 'ant
 import {UploadOutlined, UserOutlined, VideoCameraOutlined} from '@ant-design/icons';
 import Monitor from "../components/monitor";
 import {get} from "../utils/ajax";
+import {BaseSelectRef} from "rc-select";
 
 const {Option} = Select;
 const {Header, Content, Footer, Sider} = Layout;
@@ -15,14 +16,19 @@ export default class ConsoleView extends React.Component<any, any> {
     };
     private readonly addressInputRef: React.RefObject<InputRef>;
     private readonly monitor: React.RefObject<Monitor>;
+    private readonly selector: React.RefObject<BaseSelectRef>;
 
     constructor(props: any) {
         super(props);
         this.addressInputRef = createRef();
         this.monitor = createRef();
+        this.selector = createRef();
     }
 
     synchronize = () => {
+        if (this.selector.current != null) {
+            this.selector.current.scrollTo(0)
+        }
         let addrInput = this.addressInputRef.current;
         let addr = "localhost:8000";
         if (addrInput != null && addrInput.input != null) {
@@ -39,9 +45,9 @@ export default class ConsoleView extends React.Component<any, any> {
                 groups: [...groups]
             });
         }, (error: any) => {
-            console.log(error);
+            // console.log(error);
             this.setState({
-                groups: []
+                groups: Array<string>()
             });
         })
     };

@@ -13,9 +13,10 @@ func (f GetterFunc) Get(key string) (ByteView, error) {
 }
 
 type group struct {
-	namespace string
-	getter    Getter
-	cash      *Cash
+	namespace   string
+	peerPicker  PeerPicker
+	localGetter Getter
+	cash        *Cash
 }
 
 func (g *group) Get(key string) (ByteView, error) {
@@ -39,6 +40,12 @@ func (g *group) Put(key string, value []byte) error {
 		return fmt.Errorf("empty key is not allowed")
 	}
 
+	// If successfully put into a peer, then just return
+	if err := g.putInPeer(key, ByteView{value}); err == nil {
+		fmt.Printf("Put %s -> %s to the peer\n", key, string(value))
+		return nil
+	}
+
 	// Put into the cache
 	g.cash.Put(key, value)
 	return nil
@@ -52,6 +59,9 @@ func (g *group) Del(key string) (ByteView, error) {
 
 	// Del the key in cache
 	if value, ok := g.cash.Del(key); ok {
+		return value, nil
+	} else if value, err := g.delInPeer(key); err == nil {
+		fmt.Printf("Delete %s -> %s from a peer\n", key, value.String())
 		return value, nil
 	}
 	return ByteView{}, fmt.Errorf("no such key %s", key)
@@ -70,14 +80,50 @@ func (g *group) populate(key string, value ByteView) {
 }
 
 func (g *group) load(key string) (ByteView, error) {
-	value, err := g.getter.Get(key)
-	if err != nil {
-		return ByteView{}, err
+	var value ByteView
+	var err error
+
+	// Try to get from peer, if there exists, then return.
+	if value, err = g.getFromPeer(key); err == nil {
+		return value, nil
+	}
+
+	// Otherwise, get locally and populate the key to the cache
+	if value, err = g.getLocally(key); err != nil {
+		return value, err
 	}
 
 	// Populate to the cache.
 	g.populate(key, value)
 	return value, nil
+}
+
+func (g *group) getFromPeer(key string) (ByteView, error) {
+	if peer := g.peerPicker.PickPeer(key, g.namespace); peer != nil {
+		return peer.Get(key)
+	} else {
+		return ByteView{}, fmt.Errorf("no available peer")
+	}
+}
+
+func (g *group) delInPeer(key string) (ByteView, error) {
+	if peer := g.peerPicker.PickPeer(key, g.namespace); peer != nil {
+		return peer.Del(key)
+	} else {
+		return ByteView{}, fmt.Errorf("no available peer")
+	}
+}
+
+func (g *group) putInPeer(key string, value ByteView) error {
+	if peer := g.peerPicker.PickPeer(key, g.namespace); peer != nil {
+		return peer.Put(key, value)
+	} else {
+		return fmt.Errorf("no available peer")
+	}
+}
+
+func (g *group) getLocally(key string) (ByteView, error) {
+	return g.localGetter.Get(key)
 }
 
 func (g *group) Namespace() string {

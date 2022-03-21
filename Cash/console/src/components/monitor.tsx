@@ -158,17 +158,15 @@ export default class Monitor extends React.Component<MonitorProps, any> {
     }
 
     getInfo = () => {
+        if (this.props.namespace.length == 0) return;
         let url: string = `http://${this.props.addr}${this.defaultPath}${this.props.namespace}/info`;
-        console.log(this.props.namespace);
         let start = Date.now();
         get(url, (info: Info) => {
             this.setState({
                 percent: this.pushBack(this.state.percent, Number(info.percent), 50),
                 rtt: this.pushBack(this.state.rtt, Date.now() - start, 50)
-            });
-            // console.log(info.maxVolume);
-            // console.log(info.percent);
-            // console.log(info.used)
+            })
+        }, (err: any) => {
         })
     };
 
@@ -197,7 +195,9 @@ export default class Monitor extends React.Component<MonitorProps, any> {
         return Math.floor(flt * 100 + 0.5) / 100
     };
 
-    render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | Iterable<React.ReactNode> | React.ReactPortal | boolean | null | undefined {
+    render()
+        :
+        React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | Iterable<React.ReactNode> | React.ReactPortal | boolean | null | undefined {
         return <Row>
             <Col span={12}> {this.charts()}</Col>
             <Col span={12}>

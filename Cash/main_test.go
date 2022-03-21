@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 )
 
@@ -24,4 +25,6 @@ func Test(t *testing.T) {
 	if false {
 		t.Error()
 	}
+
+	fmt.Println(url.QueryEscape("1"))
 }
