@@ -98,7 +98,7 @@ func (pool *HTTPPool) info(group *group, w http.ResponseWriter) {
 func (pool *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")  //允许访问所有域
 	w.Header().Set("Access-Control-Allow-Headers", "*") //header的类型
-	w.Header().Set("Access-Control-Allow-Method", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
 	reqPath := r.URL.Path
 	if !strings.HasPrefix(reqPath, pool.basePath) {
 		http.NotFound(w, r)

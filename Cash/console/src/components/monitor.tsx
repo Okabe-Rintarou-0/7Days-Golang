@@ -1,5 +1,5 @@
 import React from "react";
-import {Card, Col, Row} from 'antd'
+import {Card, Col, InputNumber, Row} from 'antd'
 import EChartsReact from "echarts-for-react";
 import {get} from "../utils/ajax";
 
@@ -14,15 +14,23 @@ interface Info {
     percent: number
 }
 
+interface GroupInfo {
+    name: string
+    value: number
+}
+
 export default class Monitor extends React.Component<MonitorProps, any> {
     state = {
         addr: "unknown",
         namespace: "unknown",
-        sampleInterval: 500,
+        sampleInterval: 2000,
         maxVolume: 0,
         percent: Array<number>(),
         rtt: Array<number>(),
+        groupInfos: Array<GroupInfo>()
     };
+
+    private pollTimer: NodeJS.Timer | undefined;
 
     constructor(props: MonitorProps) {
         super(props);
@@ -33,8 +41,24 @@ export default class Monitor extends React.Component<MonitorProps, any> {
     }
 
     componentDidMount(): void {
-        this.poll();
+        this.pollTimer = this.poll();
     }
+
+    fetchGroupInfo = (groups: Array<string>) => {
+        let groupInfos = Array<GroupInfo>();
+        groups.forEach((group: string, _: number) => {
+            let url = `http://${this.props.addr}${this.defaultPath}${group}/info`;
+            get(url, (info: Info) => {
+                groupInfos.push({
+                    name: group,
+                    value: info.maxVolume,
+                });
+                this.setState({
+                    groupInfos: [this.state.groupInfos, ...groupInfos]
+                })
+            })
+        });
+    };
 
     reset = () => {
         this.setState({
@@ -53,8 +77,6 @@ export default class Monitor extends React.Component<MonitorProps, any> {
                 right: 100,
                 show: true,
                 feature: {
-                    // magicType: {type: ['line',]},
-                    // restore: {},
                     saveAsImage: {}
                 }
             },
@@ -106,8 +128,6 @@ export default class Monitor extends React.Component<MonitorProps, any> {
                 right: 100,
                 show: true,
                 feature: {
-                    // magicType: {type: ['line',]},
-                    // restore: {},
                     saveAsImage: {}
                 }
             },
@@ -148,6 +168,46 @@ export default class Monitor extends React.Component<MonitorProps, any> {
         };
     };
 
+    getPieChartOption = () => {
+        return {
+            tooltip: {
+                trigger: 'item'
+            },
+            legend: {
+                top: '5%',
+                left: 'center'
+            },
+            series: [
+                {
+                    name: 'Max Volume',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '40',
+                            fontWeight: 'bold'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: this.state.groupInfos
+                }
+            ]
+        };
+    };
+
     defaultPath = '/__cash__/';
 
     pushBack(array: Array<number>, data: number, maxLength: number): Array<number> {
@@ -158,8 +218,8 @@ export default class Monitor extends React.Component<MonitorProps, any> {
     }
 
     getInfo = () => {
-        if (this.props.namespace.length == 0) return;
-        let url: string = `http://${this.props.addr}${this.defaultPath}${this.props.namespace}/info`;
+        if (this.props.namespace.length === 0) return;
+        let url = `http://${this.props.addr}${this.defaultPath}${this.props.namespace}/info`;
         let start = Date.now();
         get(url, (info: Info) => {
             this.setState({
@@ -174,7 +234,7 @@ export default class Monitor extends React.Component<MonitorProps, any> {
         this.getInfo();
     }, this.state.sampleInterval);
 
-    charts = () => (
+    lineCharts = () => (
         <div>
             <EChartsReact option={this.getUsageOption()}
                           style={{height: '500px'}}/>
@@ -183,8 +243,52 @@ export default class Monitor extends React.Component<MonitorProps, any> {
         </div>
     );
 
+    adjustSampleInterval = (interval: string) => {
+        if (this.pollTimer !== undefined) {
+            clearInterval(this.pollTimer);
+        }
+
+        this.setState({
+            sampleInterval: Number(interval) * 1000
+        }, () => {
+            this.pollTimer = this.poll();
+        });
+    };
+
+    infoCard = () => (
+        <div className="site-card-border-less-wrapper">
+            <Card title="Info Panel" bordered={true}
+                  headStyle={{fontSize: "2.2em", fontWeight: "bold"}}
+                  bodyStyle={{fontSize: "1.7em"}}
+                  style={{textAlign: "left"}}>
+                <p>Address: {this.props.addr}</p>
+                <p>Namespace: {this.props.namespace}</p>
+                <p>Average Usage: {this.average(this.state.percent)} %</p>
+                <p>Average RTT: {this.average(this.state.rtt)} ms</p>
+                <p>Sampling Interval：
+                    <InputNumber<string> style={{width: 150}}
+                                         addonAfter="seconds"
+                                         defaultValue="2"
+                                         min="0.5"
+                                         max="100"
+                                         step="0.5"
+                                         onChange={this.adjustSampleInterval}
+                                         stringMode
+                    />
+                </p>
+            </Card>
+        </div>
+    );
+
+    pieChart = () => (
+        <div>
+            <EChartsReact option={this.getPieChartOption()}
+                          style={{height: '600px'}}/>
+        </div>
+    );
+
     average = (arr: Array<number>): number => {
-        if (arr.length == 0) {
+        if (arr.length === 0) {
             return NaN
         } else {
             return this.formatFloat(arr.reduce(((previousValue: number, currentValue: number): number => previousValue + currentValue)) / arr.length)
@@ -195,22 +299,12 @@ export default class Monitor extends React.Component<MonitorProps, any> {
         return Math.floor(flt * 100 + 0.5) / 100
     };
 
-    render()
-        :
-        React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | Iterable<React.ReactNode> | React.ReactPortal | boolean | null | undefined {
+    render(): React.ReactElement {
         return <Row>
-            <Col span={12}> {this.charts()}</Col>
+            <Col span={12}> {this.lineCharts()}</Col>
             <Col span={12}>
-                <div className="site-card-border-less-wrapper">
-                    <Card title="信息一览" bordered={false} headStyle={{fontSize: "2em"}}
-                          bodyStyle={{fontSize: "1.5em"}}
-                          style={{textAlign: "left"}}>
-                        <p>地址: {this.props.addr}</p>
-                        <p>命名空间: {this.props.namespace}</p>
-                        <p>平均空间占用率: {this.average(this.state.percent)} %</p>
-                        <p>平均响应时间: {this.average(this.state.rtt)} ms</p>
-                    </Card>
-                </div>
+                {this.infoCard()}
+                {this.pieChart()}
             </Col>
         </Row>
     }

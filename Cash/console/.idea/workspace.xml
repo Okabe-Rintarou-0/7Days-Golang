@@ -2,13 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9c9e6e84-4b50-493f-8a11-d2b7c10b814b" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../cash/peer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../cash/byteview.go" beforeDir="false" afterPath="$PROJECT_DIR$/../cash/byteview.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../cash/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/../cash/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../README.assets/console-16478359331921.gif" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../cash/http.go" beforeDir="false" afterPath="$PROJECT_DIR$/../cash/http.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../getter.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/../main_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,8 +15,9 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="package.json" />
-        <option value="TypeScript JSX File" />
         <option value="CSS File" />
+        <option value="TypeScript JSX File" />
+        <option value="TypeScript File" />
       </list>
     </option>
   </component>
@@ -49,6 +46,10 @@
     <property name="ts.external.directory.path" value="D:\7Days-Golang\Cash\console\node_modules\typescript\lib" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\7Days-Golang\Cash\console\src\layout" />
+      <recent name="D:\7Days-Golang\Cash\console\src\css" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\92304\WebstormProjects\cash\public" />
       <recent name="C:\Users\92304\WebstormProjects\cash\src" />
@@ -84,6 +85,7 @@
       <workItem from="1647740823114" duration="10326000" />
       <workItem from="1647826407768" duration="3439000" />
       <workItem from="1647869019880" duration="2083000" />
+      <workItem from="1647913911938" duration="28562000" />
     </task>
     <servers />
   </component>
@@ -91,6 +93,10 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="1090" y="416" key="#com.intellij.ide.util.MemberChooser" timestamp="1647955005289">
+      <screen x="0" y="0" width="2560" height="1400" />
+    </state>
+    <state x="1090" y="416" key="#com.intellij.ide.util.MemberChooser/0.0.2560.1400@0.0.2560.1400" timestamp="1647955005289" />
     <state x="880" y="293" key="CommitChangelistDialog2" timestamp="1647746753375">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -119,9 +125,9 @@
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="936" y="330" key="run.anything.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1647747243499" />
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1647744857358">
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup" timestamp="1647948363923">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
-    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1647744857358" />
+    <state x="943" y="315" width="672" height="678" key="search.everywhere.popup/0.0.2560.1400@0.0.2560.1400" timestamp="1647948363923" />
   </component>
 </project>
