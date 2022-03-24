@@ -51,7 +51,6 @@ export function del(url: string, callback: Function, onError?: Function) {
         })
 }
 
-
 export function get(url: string, callback: Function, onError?: Function) {
     let opts: RequestInit = {
         method: "GET",

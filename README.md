@@ -1,4 +1,4 @@
-# 7Days-Golang
+# Let us go
 
 Tiny projects help me learn Golang.
 

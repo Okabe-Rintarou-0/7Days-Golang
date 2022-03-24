@@ -137,7 +137,6 @@ func (pool *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-
 	reqPath := r.URL.Path
 	if !strings.HasPrefix(reqPath, pool.basePath) {
 		http.NotFound(w, r)
