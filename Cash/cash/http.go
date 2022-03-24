@@ -18,6 +18,20 @@ const (
 	defaultNumReplicas = 50
 )
 
+type BatchedResponse struct {
+	Responses []string `json:"responses"`
+}
+
+type BatchedRequestEntry struct {
+	Key    string `json:"key"`
+	Value  string `json:"value"`
+	Method string `json:"method"`
+}
+type BatchedRequest struct {
+	Address  string                `json:"address"`
+	Group    string                `json:"group"`
+	Requests []BatchedRequestEntry `json:"requests"`
+}
 type HTTPPool struct {
 	self     string
 	basePath string
@@ -86,19 +100,44 @@ func (pool *HTTPPool) handleDel(group *group, w http.ResponseWriter, r *http.Req
 	}
 }
 
-func (pool *HTTPPool) info(group *group, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	encoder := json.NewEncoder(w)
-	if err := encoder.Encode(group.Info()); err != nil {
+func (pool *HTTPPool) allowCors(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")  //允许访问所有域
+	w.Header().Set("Access-Control-Allow-Headers", "*") //header的类型
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+}
+
+func (pool *HTTPPool) handleBatch(group *group, w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	batchedRequest := BatchedRequest{}
+	if err := json.Unmarshal(body, &batchedRequest); err == nil {
+		w.WriteHeader(http.StatusOK)
+		response := group.DoBatch(&batchedRequest)
+		pool.json(w, response)
+	} else {
 		pool.fail(w, err.Error())
 	}
 }
 
+func (pool *HTTPPool) json(w http.ResponseWriter, v interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
+	if err := encoder.Encode(v); err != nil {
+		pool.fail(w, err.Error())
+	}
+}
+
+func (pool *HTTPPool) info(group *group, w http.ResponseWriter) {
+	w.WriteHeader(http.StatusOK)
+	pool.json(w, group.Info())
+}
+
 func (pool *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")  //允许访问所有域
-	w.Header().Set("Access-Control-Allow-Headers", "*") //header的类型
-	w.Header().Set("Access-Control-Allow-Method", "*")
+	pool.allowCors(w)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	reqPath := r.URL.Path
 	if !strings.HasPrefix(reqPath, pool.basePath) {
 		http.NotFound(w, r)
@@ -119,8 +158,13 @@ func (pool *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(parts) == 2 && parts[1] == "info" {
-		pool.info(group, w)
+	if len(parts) == 2 {
+		switch parts[1] {
+		case "info":
+			pool.info(group, w)
+		case "__batch__":
+			pool.handleBatch(group, w, r)
+		}
 		return
 	}
 

@@ -1,102 +1,38 @@
-import React, {createRef, ReactNode} from "react";
-import {Button, Layout, Menu, Row, Select, Col, Input, InputRef, Card} from 'antd';
-import {UploadOutlined, UserOutlined, VideoCameraOutlined} from '@ant-design/icons';
-import Monitor from "../components/monitor";
-import {get} from "../utils/ajax";
-import {BaseSelectRef} from "rc-select";
+import React from "react";
+import {Layout, Menu} from 'antd';
+import {MonitorOutlined, PlaySquareOutlined} from '@ant-design/icons';
+import MonitorLayout from "../layout/monitorLayout";
+import OperationPlatformLayout from "../layout/operationPlatformLayout";
 
-const {Option} = Select;
-const {Header, Content, Footer, Sider} = Layout;
+const {Sider} = Layout;
 
 export default class ConsoleView extends React.Component<any, any> {
     state = {
-        groups: Array<string>(),
-        addr: '',
-        monitorGroup: ''
+        currentSection: 0
     };
-    private readonly addressInputRef: React.RefObject<InputRef>;
-    private readonly monitor: React.RefObject<Monitor>;
-    private readonly selector: React.RefObject<BaseSelectRef>;
 
-    constructor(props: any) {
-        super(props);
-        this.addressInputRef = createRef();
-        this.monitor = createRef();
-        this.selector = createRef();
-    }
-
-    synchronize = () => {
-        if (this.selector.current != null) {
-            this.selector.current.scrollTo(0)
-        }
-        let addrInput = this.addressInputRef.current;
-        let addr = "localhost:8000";
-        if (addrInput != null && addrInput.input != null) {
-            addr = addrInput.input.value;
-        }
-
+    changeSection = (item: any) => {
         this.setState({
-            addr: addr
-        });
-
-        const url = `http://${addr}/__cash__/__groups__`;
-        get(url, (groups: Array<string>) => {
-            this.setState({
-                groups: [...groups]
-            });
-        }, (error: any) => {
-            // console.log(error);
-            this.setState({
-                groups: Array<string>()
-            });
+            currentSection: Number(item.key)
         })
     };
 
-    selectMonitor = (value: string) => {
-        let monitor = this.monitor.current;
-        if (monitor != null) {
-            monitor.reset()
-        }
-        this.setState({
-            monitorGroup: value
-        });
-    };
+    private layouts = [<MonitorLayout/>, <OperationPlatformLayout/>];
 
-    render(): React.ReactElement<any, string | React.JSXElementConstructor<any>> | string | number | {} | Iterable<React.ReactNode> | React.ReactPortal | boolean | null | undefined {
+    render(): React.ReactElement {
         return <Layout>
             <Sider>
                 <div className="logo"/>
-                <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
-                    <Menu.Item key="1" icon={<UserOutlined/>}>
-                        Cash 实时监控
+                <Menu theme="dark" mode="inline" defaultSelectedKeys={['0']} onSelect={this.changeSection}>
+                    <Menu.Item key="0" icon={<MonitorOutlined/>}>
+                        Real Time Monitor
+                    </Menu.Item>
+                    <Menu.Item key="1" icon={<PlaySquareOutlined/>}>
+                        Operating Platform
                     </Menu.Item>
                 </Menu>
             </Sider>
-            <Layout>
-                <Header style={{padding: 0}}><p style={{color: "white", fontSize: "2em"}}>Cash</p></Header>
-                <Content style={{margin: '24px 16px 0', height: 1125}}>
-                    <Monitor ref={this.monitor} addr={this.state.addr} namespace={this.state.monitorGroup}/>
-                </Content>
-                <Footer style={{textAlign: 'center'}}>
-                    <Row>
-                        <Col>
-                            <Input ref={this.addressInputRef} defaultValue="localhost:8000" addonBefore="http://"
-                                   placeholder="address"/>
-                        </Col>
-                        <Col>
-                            <Select defaultValue={"Choose a group"}
-                                    style={{width: 150}} onSelect={this.selectMonitor}>
-                                {this.state.groups.map(group => (
-                                    <Option key={group}>{group}</Option>
-                                ))}
-                            </Select>
-                        </Col>
-                        <Col>
-                            <Button onClick={this.synchronize}>同步</Button>
-                        </Col>
-                    </Row>
-                </Footer>
-            </Layout>
+            {this.layouts[this.state.currentSection]}
         </Layout>
     }
 }

@@ -1,6 +1,10 @@
 package cash
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+	"sync"
+)
 
 type Getter interface {
 	Get(key string) (ByteView, error)
@@ -65,6 +69,47 @@ func (g *group) Del(key string) (ByteView, error) {
 		return value, nil
 	}
 	return ByteView{}, fmt.Errorf("no such key %s", key)
+}
+
+func (g *group) DoBatch(batchedRequest *BatchedRequest) BatchedResponse {
+	//baseUrl := fmt.Sprintf("http://%s/__cash__/%s", batchedRequest.Address, batchedRequest.Group)
+	numRequests := len(batchedRequest.Requests)
+	responses := make([]string, numRequests)
+	wg := sync.WaitGroup{}
+	wg.Add(numRequests)
+	for id, request := range batchedRequest.Requests {
+		switch request.Method {
+		case http.MethodPut:
+			go func(id int) {
+				if err := g.Put(request.Key, []byte(request.Value)); err != nil {
+					responses[id] = err.Error()
+				} else {
+					responses[id] = ""
+				}
+				wg.Done()
+			}(id)
+		case http.MethodGet:
+			go func(id int) {
+				if value, err := g.Get(request.Key); err == nil {
+					responses[id] = value.String()
+				} else {
+					responses[id] = err.Error()
+				}
+				wg.Done()
+			}(id)
+		case http.MethodDelete:
+			go func(id int) {
+				if value, err := g.Del(request.Key); err == nil {
+					responses[id] = value.String()
+				} else {
+					responses[id] = err.Error()
+				}
+				wg.Done()
+			}(id)
+		}
+	}
+	wg.Wait()
+	return BatchedResponse{responses}
 }
 
 func (g *group) Info() Info {

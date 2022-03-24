@@ -67,7 +67,7 @@ type PeerPicker interface {
 
 The consistent hash and the abstraction make the distributed system behave like a single one. 
 
-![图源自网络，侵删](C:/Users/92304/Desktop/consistent_hashing.jpg)
+![](README.assets/consistent_hashing.jpg)
 
 ### Api
 
@@ -121,4 +121,10 @@ A very naive one, made by Typescript + React + Ant-Design + Echarts.
 
 Simply monitor the usage of cash. 
 
-![console](README.assets/console-16478359331921.gif)
+#### Monitor the usage of cash
+
+![console](README.assets/console.gif)
+
+#### The operation platform
+
+![console](README.assets/operation_platform.gif)
