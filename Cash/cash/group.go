@@ -74,7 +74,7 @@ func (g *group) Del(key string) (ByteView, error) {
 func (g *group) DoBatch(batchedRequest *BatchedRequest) BatchedResponse {
 	//baseUrl := fmt.Sprintf("http://%s/__cash__/%s", batchedRequest.Address, batchedRequest.Group)
 	numRequests := len(batchedRequest.Requests)
-	responses := make([]string, numRequests)
+	responses := make([]Response, numRequests)
 	wg := sync.WaitGroup{}
 	wg.Add(numRequests)
 	for id, request := range batchedRequest.Requests {
@@ -82,27 +82,27 @@ func (g *group) DoBatch(batchedRequest *BatchedRequest) BatchedResponse {
 		case http.MethodPut:
 			go func(id int) {
 				if err := g.Put(request.Key, []byte(request.Value)); err != nil {
-					responses[id] = err.Error()
+					responses[id] = Response{"Error", err.Error()}
 				} else {
-					responses[id] = ""
+					responses[id] = Response{"Ok", ""}
 				}
 				wg.Done()
 			}(id)
 		case http.MethodGet:
 			go func(id int) {
 				if value, err := g.Get(request.Key); err == nil {
-					responses[id] = value.String()
+					responses[id] = Response{"Ok", value.String()}
 				} else {
-					responses[id] = err.Error()
+					responses[id] = Response{"Error", err.Error()}
 				}
 				wg.Done()
 			}(id)
 		case http.MethodDelete:
 			go func(id int) {
 				if value, err := g.Del(request.Key); err == nil {
-					responses[id] = value.String()
+					responses[id] = Response{"Ok", value.String()}
 				} else {
-					responses[id] = err.Error()
+					responses[id] = Response{"Error", err.Error()}
 				}
 				wg.Done()
 			}(id)

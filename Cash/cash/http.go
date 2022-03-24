@@ -18,8 +18,13 @@ const (
 	defaultNumReplicas = 50
 )
 
+type Response struct {
+	Status string `json:"status"`
+	Data   string `json:"data"`
+}
+
 type BatchedResponse struct {
-	Responses []string `json:"responses"`
+	Responses []Response `json:"responses"`
 }
 
 type BatchedRequestEntry struct {

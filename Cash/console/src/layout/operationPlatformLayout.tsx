@@ -1,13 +1,14 @@
 import React, {createRef} from "react";
 import {Badge, Button, Col, Input, InputRef, Layout, message, Row, Select, Table, Tag} from "antd";
 import {Option} from "antd/es/mentions";
-import {PlusOutlined, SendOutlined, SyncOutlined} from '@ant-design/icons'
+import {PlusOutlined, SendOutlined, SyncOutlined, CheckOutlined, CloseOutlined} from '@ant-design/icons'
 import {del, getForText, post, put} from "../utils/ajax";
 import format from 'date-fns/format';
 
 require("../css/console.css");
 
 interface RequestEntry {
+    mode: "Batched" | "Normal"
     key: number
     method: string
     address: string
@@ -33,8 +34,13 @@ interface BatchedRequest {
     requests: Array<BatchedRequestEntry>
 }
 
+interface Response {
+    status: "Ok" | "Error"
+    data: string
+}
+
 interface BatchedResponse {
-    responses: Array<string>
+    responses: Array<Response>
 }
 
 interface InputParams {
@@ -86,6 +92,16 @@ export default class OperationPlatformLayout extends React.Component<any, any> {
     };
 
     private columns = [
+        {
+            title: 'Mode',
+            dataIndex: 'mode',
+            key: 'mode',
+            render: (mode: string) => <span>
+                    {mode === "Normal" ?
+                        <Tag color={"geekblue"} key={mode}>{mode}</Tag> :
+                        <Tag color={"red"} key={mode}>{mode}</Tag>}
+                </span>
+        },
         {title: 'Time', dataIndex: 'time', key: 'time'},
         {
             title: 'Method',
@@ -172,6 +188,7 @@ export default class OperationPlatformLayout extends React.Component<any, any> {
         let requestEntry: RequestEntry;
         this.httpRequest(paramsWrap.method, paramsWrap.url, (response: string) => {
             let requestEntry = {
+                mode: "Normal",
                 key: this.state.requestEntries.length,
                 time: format(start, 'yyyy-mm-dd HH:mm:ss'),
                 url: paramsWrap.url,
@@ -189,6 +206,7 @@ export default class OperationPlatformLayout extends React.Component<any, any> {
             });
         }, (err: string) => {
             requestEntry = {
+                mode: "Batched",
                 key: this.state.requestEntries.length,
                 time: format(start, 'yyyy-mm-dd HH:mm:ss'),
                 url: paramsWrap.url,
@@ -309,12 +327,33 @@ export default class OperationPlatformLayout extends React.Component<any, any> {
         let batchRequest = this.getBatchedRequest();
         if (batchRequest == null) return;
         let url = `http://${batchRequest.address}/__cash__/${batchRequest.group}/__batch__`;
+        let tmpEntries = [...this.state.batchRequestEntries];
+        let start = Date.now();
         post(url, batchRequest, (response: BatchedResponse) => {
-                console.log(response.responses);
+                let newEntries = Array<RequestEntry>();
+                tmpEntries.map((entry, index) => {
+                    newEntries.push({
+                        mode: "Batched",
+                        address: entry.address,
+                        group: entry.group,
+                        key: this.state.requestEntries.length + index,
+                        method: entry.method,
+                        requestKey: entry.requestKey,
+                        response: response.responses[index].data,
+                        responseTime: Date.now() - start,
+                        status: response.responses[index].status,
+                        time: format(start, 'yyyy-mm-dd HH:mm:ss'),
+                        url: entry.url
+                    })
+                });
+                this.setState({
+                    requestEntries: [...this.state.requestEntries, ...newEntries]
+                });
             },
             (err: any) => {
                 console.log(err);
             });
+
         this.setState({
             batchRequestEntries: []
         });
@@ -327,7 +366,9 @@ export default class OperationPlatformLayout extends React.Component<any, any> {
                 title: 'Method',
                 dataIndex: 'method',
                 key: 'method',
-                render: (method: string) => <span><Tag color={this.mapColor(method)} key={method}>{method}</Tag></span>
+                render: (method: string) => <span>
+                    <Tag color={this.mapColor(method)} key={method}>{method}</Tag>
+                </span>
             },
             {title: 'Address', dataIndex: 'address', key: 'address'},
             {title: 'Group', dataIndex: 'group', key: 'group'},
