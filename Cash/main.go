@@ -35,15 +35,15 @@ func main() {
 
 	peers := []string{"localhost:8000", "localhost:8001", "localhost:8002"}
 	peerMap := map[int]string{
-		8000: "localhost:8000",
-		8001: "localhost:8001",
-		8002: "localhost:8002",
+		8000: "localhost:8001",
+		8001: "localhost:8002",
+		8002: "localhost:8003",
 	}
 
 	var self string
 	var ok bool
 	if self, ok = peerMap[port]; !ok {
-		self = "localhost:8000"
+		self = "localhost:8001"
 	}
 
 	pool := cash.NewHTTPPool(self, peers)

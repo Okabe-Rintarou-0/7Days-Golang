@@ -2,6 +2,7 @@ package cash
 
 import (
 	"Cash/cash/consistentHash"
+	"Cash/cash/singleflight"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -137,6 +138,7 @@ func (pool *HTTPPool) info(group *group, w http.ResponseWriter) {
 }
 
 func (pool *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("received msg")
 	pool.allowCors(w)
 	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusOK)
@@ -188,6 +190,7 @@ func (pool *HTTPPool) NewGroup(logLevel, maxVolume int, namespace string, localG
 		peerPicker:  pool,
 		localGetter: localGetter,
 		cash:        defaultCash(logLevel, maxVolume, namespace),
+		loader:      &singleflight.Group{},
 	}
 	pool.lock.Lock()
 	defer pool.lock.Unlock()

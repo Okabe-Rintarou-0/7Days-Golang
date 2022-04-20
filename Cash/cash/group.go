@@ -1,6 +1,7 @@
 package cash
 
 import (
+	"Cash/cash/singleflight"
 	"fmt"
 	"net/http"
 	"sync"
@@ -21,6 +22,7 @@ type group struct {
 	peerPicker  PeerPicker
 	localGetter Getter
 	cash        *Cash
+	loader      *singleflight.Group
 }
 
 func (g *group) Get(key string) (ByteView, error) {
@@ -125,14 +127,15 @@ func (g *group) populate(key string, value ByteView) {
 }
 
 func (g *group) load(key string) (ByteView, error) {
-	var value ByteView
-	var err error
-
 	// Try to get from peer, if there exists, then return.
-	if value, err = g.getFromPeer(key); err == nil {
-		return value, nil
+	if value, err := g.loader.DoOnce(key, func() (interface{}, error) {
+		return g.getFromPeer(key)
+	}); err == nil {
+		return value.(ByteView), nil
 	}
 
+	var value ByteView
+	var err error
 	// Otherwise, get locally and populate the key to the cache
 	if value, err = g.getLocally(key); err != nil {
 		return value, err
